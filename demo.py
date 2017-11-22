@@ -34,11 +34,19 @@ def download_model(fn):
               '--create-dirs', '-o', fn])
 
 
-def load_demo_images():
+def load_demo_images(image_file_name):
     ims = []
-    for i in range(3):
-        im = Image.open('imgs/%d.png' % i)
-        ims.append([np.array(im).transpose(
+    size = (127, 127)
+    for i in range(8):
+        im = Image.open('custom_pics/%s/%d.jpg' % (image_file_name, i)).convert("RGB")
+        im.thumbnail((127, 127))
+
+        background = Image.new('RGB', size, (255, 255, 255))
+        background.paste(
+            im, (int((size[0] - im.size[0]) / 2), int((size[1] - im.size[1]) / 2))
+        )
+        background.save('custom_pics/%s/%d_modified.jpg' % (image_file_name, i))
+        ims.append([np.array(background).transpose(
             (2, 0, 1)).astype(np.float32) / 255.])
     return np.array(ims)
 
@@ -46,10 +54,11 @@ def load_demo_images():
 def main():
     '''Main demo function'''
     # Save prediction into a file named 'prediction.obj' or the given argument
-    pred_file_name = sys.argv[1] if len(sys.argv) > 1 else 'prediction.obj'
+    pred_file_name = 'custom_pics/%s/%s.obj' % (sys.argv[1], sys.argv[1])
 
     # load images
-    demo_imgs = load_demo_images()
+    image_file_name = sys.argv[1]
+    demo_imgs = load_demo_images(image_file_name)
 
     # Download and load pretrained weights
     download_model(DEFAULT_WEIGHTS)
